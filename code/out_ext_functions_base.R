@@ -141,6 +141,8 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
   c2<-agg_means[[2]]
   c3<-agg_means[[3]]
     f<-clustprobs[[1]]
+    fs1<-f%>%group_by(source)%>%summarise(c=sum(c_mean))
+    fs1<-fs1%>%mutate(c_p=c/sum(fs1$c))
   pcor<-pollcorr[[1]][[1]]
   ccor<-pollcorr[[2]][[1]]
   t<-list()
@@ -167,13 +169,13 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
     ggarrange(wind,day, week,month, ncol = 4),
     ggarrange(prof,prof_log,pltcor,ncol=3),
     nrow = 2  # plot1 and plot2 in second row
-  ),top=paste0("Source-",i))
+  ),top=paste0("Source-",i," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
   }else{
     t[[maxclust]]<-annotate_figure(ggarrange(   # plot4 in first row
       ggarrange(day, week,month, ncol = 3),
       ggarrange(prof,prof_log,pltcor,ncol=3),
       nrow = 2  # plot1 and plot2 in second row
-    ),top=paste0("Source-",i))
+    ),top=paste0("Source-",i," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
   }
   }
   return(t)
@@ -191,19 +193,22 @@ Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref){
   f1<-clustprobs[[1]]
   f1<-left_join(f1%>%ungroup(),timeref%>%ungroup()%>%select(time=timeindex,center_hour,weekday,month),by="time")
   ft1<-f1%>%group_by(time,center_hour,weekday,month)%>%summarise(c_mean=sum(c_mean))
-  #f1<-f1%>%group_by(clust)%>%summarise(p=mean(p_mean),c=mean(c_mean))
+  fs1<-f1%>%group_by(source)%>%summarise(c=sum(c_mean))
+  fs1<-fs1%>%mutate(c_p=c/sum(fs1$c))
   #f2<-clustprobs[[4]]
   week<-ggplot(ft1)+geom_boxplot(aes(x=weekday,y=c_mean))+scale_y_log10(limits=c(10,70000))+geom_pointrange(data=c1%>%filter(source_n=="Total"),aes(x=weekday,y=m,ymin=low,ymax=high),colour="red",size=0.3)+labs(x="Weekday",y="c(t)")+ theme(axis.title.y = element_text(angle=0))
   month<-ggplot(ft1)+geom_boxplot(aes(x=month,y=c_mean))+scale_y_log10(limits=c(10,70000))+geom_pointrange(data=c2%>%filter(source_n=="Total"),aes(x=month,y=m,ymin=low,ymax=high),colour="red",size=0.3)+labs(x="Month",y="c(t)")+ theme(axis.title.y = element_text(angle=0))
   day<-ggplot(ft1)+geom_boxplot(aes(x=center_hour,y=c_mean,group=center_hour))+scale_y_log10(limits=c(10,70000))+geom_pointrange(data=c3%>%filter(source_n=="Total"),aes(x=center_hour,y=m,ymin=low,ymax=high),colour="red",size=0.3)+xlim(0,23)+labs(x="Time of day (h)",y="c(t)")+ theme(axis.title.y = element_text(angle=0))
   #barp<-ggplot(f1, aes(x=as.factor(clust),y=p)) + 
   #  geom_bar(stat="identity")+labs(y="Mean prop. of conc.",x="Cluster")
+  prop<-ggplot(fs1)+geom_point(aes(x=factor(source),y=c_p*100))+geom_hline(aes(yintercept=1),colour="red")+
+    labs(x="Source",y="Prop. of conc. (%)")+scale_y_continuous(breaks=c(0,1,5,10,15,20,25,30,40,50))
   barc<-ggplot(f1, aes(x=as.factor(source),y=c)) + 
-    geom_boxplot(aes(group=source,y=c_mean))+labs(y="c(t)*f(k,t)",x="Source")
+    geom_boxplot(aes(group=source,y=c_mean))+labs(y="c(t)*f(k,t)",x="Source") 
   #conc<-ggplot(f2)+geom_line(aes(x=time,y=mean))+geom_ribbon(aes(x=time,ymin=low,ymax=high),colour="grey",alpha=0.5)+scale_y_log10()
   sds<-ggplot(v)+geom_pointrange(aes(x=center,y=sqrt(mean),ymin=sqrt(low),ymax=sqrt(high)))+labs(y=expression(sigma[p]),x="Size bin center (nm)")+scale_x_log10()
   plt<-ggarrange(   # plot4 in first row
-    ggarrange(barc,sds,ncol=2),
+    ggarrange(prop,barc,sds,ncol=3),
     annotate_figure(ggarrange(day,week,month, ncol = 3),
                     top = text_grob("Aggregate mean", size = 12,hjust = 2.5)),
     nrow = 2  # plot1 and plot2 in second row
