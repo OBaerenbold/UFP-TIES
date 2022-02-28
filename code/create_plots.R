@@ -12,7 +12,7 @@ load(paste0("samples/",name,".RData"))
 dir.create(paste0("plots/",name))
 #load some functions to extract results
 source(file = "code/out_ext_functions_base.R")
-
+clustfilt<-c(1:4,6,9,10,13,14)
 #some of the output of functions is used as input for the next ones so care is needed when making chances to output of functions
 
 #creating time-series of proportion of concentration and concentration of each cluster
@@ -27,7 +27,7 @@ clustprobs[[5]]
 ggsave(file=paste0("plots/",name,"/total-conc-timeseries",".png"),device="png",width=20,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/total-conc-timeseries",".pdf"),device="pdf",width=20,height=15,units="cm")
 #calculates correlation matrix of time series of each cluster with pollutations
-pollcorr<-pollutants_corr(data=clustprobs[[1]],poll=poll,maxtime=maxtime,maxclust=maxclust)
+pollcorr<-pollutants_corr(data=clustprobs[[1]],poll=poll,maxtime=maxtime,maxclust=maxclust,clustfilt=clustfilt)
 pollcorr[[1]][[2]]
 ggsave(file=paste0("plots/",name,"/clust-prob-corr",".png"),device="png",width=20,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/clust-prob-corr",".pdf"),device="pdf",width=20,height=15,units="cm")
@@ -46,7 +46,7 @@ ggsave(file=paste0("plots/",name,"/poll-corr",".png"),device="png",width=20,heig
 ggsave(file=paste0("plots/",name,"/poll-corr",".pdf"),device="pdf",width=20,height=15,units="cm")
 
 #calculates combined plots of cluster profiles, need to select which ones in plot with clustfilt
-clustfilt<-c(1:4,6,9,10,13,14)
+
 cl_comp<-clust_comp(maxclust,maxtime,comps,S_prep,clustfilt=clustfilt,sizegroup)
 cl_comp[[1]][[4]]
 ggsave(file=paste0("plots/",name,"/clusts-profile.png"),device="png",width=20,height=15,units="cm")

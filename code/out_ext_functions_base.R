@@ -21,8 +21,9 @@ clustprob<-function(maxclust,maxtime,S_prep,timeref){
   return(list(z,plt,plt2,m,plt3))
 }
 
-pollutants_corr<-function(data,poll,maxtime,maxclust){
+pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt){
   library(corrplot)
+  data<-data%>%filter(source%in%clustfilt)
   probs<-data%>%pivot_wider(id_cols = c("time","source"),names_from="source",names_prefix = "S_",values_from="p_mean")%>%select(-time)
   cons<-data%>%pivot_wider(id_cols = c("time","source"),names_from="source",names_prefix = "S_",values_from="c_mean")%>%select(-time)
   polls<-poll%>%select(-timeindex)
@@ -32,22 +33,23 @@ pollutants_corr<-function(data,poll,maxtime,maxclust){
   levels<-rownames(pdta)
   pdta<-as.data.frame(pdta)
   pdta$type1<-levels
-  pdta<-pdta%>%pivot_longer(`S_1`:PMFR,names_to="type2",values_to="cor")
+  pdta<-pdta%>%pivot_longer(levels[1]:PMFR,names_to="type2",values_to="cor")
   pdta$type1<-factor(pdta$type1,levels=levels)
   pdta$type2<-factor(pdta$type2,levels=levels)
-  plt1<-ggplot(pdta%>%filter(type1%in%levels[1:maxclust],type2%in%levels[1:maxclust]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
-    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=1:maxclust) + scale_y_discrete(labels=1:maxclust)
-  plt2<-ggplot(pdta%>%filter(type1%in%levels[(maxclust+1):length(levels)],type2%in%levels[1:maxclust]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
-  plt3<-ggplot(pdta%>%filter(type1%in%levels[(maxclust+1):length(levels)],type2%in%levels[(maxclust+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
+  clustlength<-length(clustfilt)
+  plt1<-ggplot(pdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
+    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=clustfilt) + scale_y_discrete(labels=clustfilt)
+  plt2<-ggplot(pdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
+  plt3<-ggplot(pdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[(clustlength+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
   #same for concentrations
   cdta<-as.data.frame(cdta)
   cdta$type1<-levels
-  cdta<-cdta%>%pivot_longer(`S_1`:PMFR,names_to="type2",values_to="cor")
+  cdta<-cdta%>%pivot_longer(levels[1]:PMFR,names_to="type2",values_to="cor")
   cdta$type1<-factor(cdta$type1,levels=levels)
   cdta$type2<-factor(cdta$type2,levels=levels)
-  plt4<-ggplot(cdta%>%filter(type1%in%levels[1:maxclust],type2%in%levels[1:maxclust]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
-  plt5<-ggplot(cdta%>%filter(type1%in%levels[(maxclust+1):length(levels)],type2%in%levels[1:maxclust]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
-  plt6<-ggplot(cdta%>%filter(type1%in%levels[(maxclust+1):length(levels)],type2%in%levels[(maxclust+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
+  plt4<-ggplot(cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
+  plt5<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
+  plt6<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[(clustlength+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
   
   return(list(list(pdta,plt1,plt2,plt3),list(cdta,plt4,plt5,plt6)))
 }
