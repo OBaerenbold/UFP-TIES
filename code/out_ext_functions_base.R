@@ -47,7 +47,9 @@ pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt){
   cdta<-cdta%>%pivot_longer(levels[1]:PMFR,names_to="type2",values_to="cor")
   cdta$type1<-factor(cdta$type1,levels=levels)
   cdta$type2<-factor(cdta$type2,levels=levels)
-  plt4<-ggplot(cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
+  plt4<- ggplot(cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
+    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=clustfilt) + scale_y_discrete(labels=clustfilt)
+  
   plt5<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
   plt6<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[(clustlength+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
   
@@ -166,8 +168,8 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
   day<-ggplot(c3%>%filter(source==i))+geom_pointrange(aes(x=center_hour,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+xlim(0,23)+labs(x="Time of day (h)",y="Mean conc. (1/cm^3)")
   if(i<maxclust){
   t[[i]]<-annotate_figure(ggarrange(   # plot4 in first row
-    ggarrange(wind,day, week,month, ncol = 4),
-    ggarrange(prof,prof_log,pltcor,ncol=3),
+    ggarrange(wind,day, week,month, ncol = 4,labels=c("W","A","B","C")),
+    ggarrange(prof,prof_log,pltcor,ncol=3,labels=c("D","E","F")),
     nrow = 2  # plot1 and plot2 in second row
   ),top=paste0("Source-",i," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
   }else{
@@ -196,9 +198,11 @@ Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref){
   fs1<-f1%>%group_by(source)%>%summarise(c=sum(c_mean))
   fs1<-fs1%>%mutate(c_p=c/sum(fs1$c))
   #f2<-clustprobs[[4]]
-  week<-ggplot(ft1)+geom_boxplot(aes(x=weekday,y=c_mean))+scale_y_log10(limits=c(10,70000))+geom_pointrange(data=c1%>%filter(source_n=="Total"),aes(x=weekday,y=m,ymin=low,ymax=high),colour="red",size=0.3)+labs(x="Weekday",y="c(t)")+ theme(axis.title.y = element_text(angle=0))
-  month<-ggplot(ft1)+geom_boxplot(aes(x=month,y=c_mean))+scale_y_log10(limits=c(10,70000))+geom_pointrange(data=c2%>%filter(source_n=="Total"),aes(x=month,y=m,ymin=low,ymax=high),colour="red",size=0.3)+labs(x="Month",y="c(t)")+ theme(axis.title.y = element_text(angle=0))
-  day<-ggplot(ft1)+geom_boxplot(aes(x=center_hour,y=c_mean,group=center_hour))+scale_y_log10(limits=c(10,70000))+geom_pointrange(data=c3%>%filter(source_n=="Total"),aes(x=center_hour,y=m,ymin=low,ymax=high),colour="red",size=0.3)+xlim(0,23)+labs(x="Time of day (h)",y="c(t)")+ theme(axis.title.y = element_text(angle=0))
+  mins<-min(ft1$c_mean)*0.90
+  maxs<-max(ft1$c_mean)*1.1
+  week<-ggplot(ft1)+geom_boxplot(aes(x=weekday,y=c_mean))+scale_y_log10(limits=c(mins,maxs))+geom_pointrange(data=c1%>%filter(source_n=="Total"),aes(x=weekday,y=m,ymin=low,ymax=high),colour="red",size=0.3)+labs(x="Weekday",y="c(t)")
+  month<-ggplot(ft1)+geom_boxplot(aes(x=month,y=c_mean))+scale_y_log10(limits=c(mins,maxs))+geom_pointrange(data=c2%>%filter(source_n=="Total"),aes(x=month,y=m,ymin=low,ymax=high),colour="red",size=0.3)+labs(x="Month",y="c(t)")
+  day<-ggplot(ft1)+geom_boxplot(aes(x=center_hour,y=c_mean,group=center_hour))+scale_y_log10(limits=c(mins,maxs))+geom_pointrange(data=c3%>%filter(source_n=="Total"),aes(x=center_hour,y=m,ymin=low,ymax=high),colour="red",size=0.3)+xlim(0,23)+labs(x="Time of day (h)",y="c(t)")
   #barp<-ggplot(f1, aes(x=as.factor(clust),y=p)) + 
   #  geom_bar(stat="identity")+labs(y="Mean prop. of conc.",x="Cluster")
   prop<-ggplot(fs1)+geom_point(aes(x=factor(source),y=c_p*100))+geom_hline(aes(yintercept=1),colour="red")+
@@ -208,11 +212,11 @@ Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref){
   #conc<-ggplot(f2)+geom_line(aes(x=time,y=mean))+geom_ribbon(aes(x=time,ymin=low,ymax=high),colour="grey",alpha=0.5)+scale_y_log10()
   sds<-ggplot(v)+geom_pointrange(aes(x=center,y=sqrt(mean),ymin=sqrt(low),ymax=sqrt(high)))+labs(y=expression(sigma[p]),x="Size bin center (nm)")+scale_x_log10()
   plt<-ggarrange(   # plot4 in first row
-    ggarrange(prop,barc,sds,ncol=3),
-    annotate_figure(ggarrange(day,week,month, ncol = 3),
+    ggarrange(prop,barc,sds,ncol=3,labels=c("A","B","C")),
+    annotate_figure(ggarrange(day,week,month, ncol = 3,labels=c("D","E","F")),
                     top = text_grob("Aggregate mean", size = 12,hjust = 2.5)),
     nrow = 2  # plot1 and plot2 in second row
-  )
+    )
   return(plt)
 }
 
