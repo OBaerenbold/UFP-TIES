@@ -56,16 +56,18 @@ pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt){
   return(list(list(pdta,plt1,plt2,plt3),list(cdta,plt4,plt5,plt6)))
 }
 
-clust_comp<-function(maxclust,maxtime,comps,S_prep,clustfilt=1:maxclust,sizegroup){
+clust_comp<-function(maxclust,maxtime,comps,S_prep,clustfilt=1:maxclust,sizegroup,names){
   z<-S_prep%>%filter(Parameter=="mu.theta")%>%group_by(index1,index2)%>%summarise(mean=mean(value),low=quantile(value,c(0.025)),high=quantile(value,c(0.975)))
   z<-z%>%rename("source"="index2","size"="index1")
   z<-z%>%mutate(size.center=as.factor(size))
   levels(z$size.center)<-levels(sizegroup$center)[comps]
   z$size.center<-as.numeric(as.character(z$size.center))
   z$source<-as.factor(z$source)
+  z$source_name<-z$source
+  levels(z$source_name)[clustfilt]<-names
   plt1<-ggplot(z)+geom_pointrange(aes(x=size.center,y=mean,ymin=low,ymax=high))+facet_wrap(~source)
   plt1b<-ggplot(z)+geom_pointrange(aes(x=size.center,y=logit(mean),ymin=logit(low),ymax=logit(high)))+facet_wrap(~source)
-  plt1c<-ggplot(z%>%filter(source%in%clustfilt))+geom_line(aes(x=size.center,y=mean,group=source,colour=source))+geom_ribbon(aes(x=size.center,ymin=low,ymax=high,group=source,fill=source),alpha=0.5)+
+  plt1c<-ggplot(z%>%filter(source%in%clustfilt))+geom_line(aes(x=size.center,y=mean,group=source_name,colour=source_name))+geom_ribbon(aes(x=size.center,ymin=low,ymax=high,group=source_name,fill=source_name),alpha=0.5)+
     scale_colour_viridis_d()+scale_x_log10()+xlab('Particle Size (nm)')+ ylab('Proportion of particle conc.')+ggtitle('Source profile') +labs(fill='Source',colour='Source')
   z2<-S_prep%>%filter(Parameter%in%c("invbw1","invbw2","knot1","knot2"))%>%group_by(index1,Parameter)%>%summarise(mean=mean(value),low=quantile(value,c(0.025)),high=quantile(value,c(0.975)))
   z2<-z2%>%rename("source"="index1")
@@ -84,8 +86,11 @@ clust_comp<-function(maxclust,maxtime,comps,S_prep,clustfilt=1:maxclust,sizegrou
   z3<-merge(z3,wswd,by=NULL)
   z3<-z3%>%mutate(kernel=exp(-0.5*invbw1*(knot1-wsgrid)^2)*exp(-0.5*invbw2*(sin((knot2-wdgrid)*3.14159/360))^2))
   z3<-z3%>%group_by(wsgrid,wdgrid,source)%>%summarise(kernel=mean(kernel))
+  z3$source<-as.factor(z3$source)
+  z3$source_name<-z3$source
+  levels(z3$source_name)[clustfilt]<-names
   plt2<-ggplot(z3%>%filter(source%in%clustfilt))+geom_tile(aes(x=wdgrid,y=wsgrid,fill=kernel))+scale_fill_viridis_c(option = "magma",limits=c(0,1))+
-    coord_polar(start = -5 / 180 * pi) +geom_point(aes(x=0,y=0),size=2,colour="red")+facet_wrap(~source)+ylab('Wind Speed (m/s)')+xlab('Wind direction')+labs(fill='Kernel')+
+    coord_polar(start = -5 / 180 * pi) +geom_point(aes(x=0,y=0),size=2,colour="red")+facet_wrap(~source_name)+ylab('Wind Speed (m/s)')+xlab('Wind direction')+labs(fill='Kernel')+
     scale_x_continuous(breaks = c(0,90,180,270),labels = c("N", "E", "S","W"))  
   
   return(list(list(z,plt1,plt1b,plt1c),list(z3,plt2)))
@@ -151,9 +156,9 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
   for(i in 1:maxclust){
   cor<-rbind(pcor%>%filter(type1==paste0("S_",i))%>%select(type2,cor)%>%mutate(type="prop."),ccor%>%filter(type1==paste0("S_",i))%>%select(type2,cor)%>%mutate(type="conc."))
   cor<-cor%>%separate(type2,into=c("a","b"),sep=1)%>%filter(a!="S")%>%mutate(type2=paste0(a,b))%>%select(-a,-b)
-  pltcor<-ggplot(cor)+geom_point(aes(x=type2,y=cor,group=type,colour=type,shape=type))+labs(x="",y="Correlation",shape="",colour="")+ theme(axis.text.x = element_text(angle = 90))
-  max<-round(max(c(c1%>%filter(source==i)%>%pull(high),c2%>%filter(source==i)%>%pull(high),c3%>%filter(source==i)%>%pull(high)))*1.1,-1)
-  min<-round(min(c(c1%>%filter(source==i)%>%pull(low),c2%>%filter(source==i)%>%pull(low),c3%>%filter(source==i)%>%pull(low)))*0.9,-1)
+  pltcor<-ggplot(cor%>%filter(type=="conc."))+geom_point(aes(x=type2,y=cor))+labs(x="",y="Correlation",shape="",colour="")+ theme(axis.text.x = element_text(angle = 90))
+  max<-max(c(c1%>%filter(source==i)%>%pull(high),c2%>%filter(source==i)%>%pull(high),c3%>%filter(source==i)%>%pull(high)))*1.1
+  min<-max(min(c(c1%>%filter(source==i)%>%pull(low),c2%>%filter(source==i)%>%pull(low),c3%>%filter(source==i)%>%pull(low)))*0.9,0.1)
   #prop<-ggplot(f%>%filter(clust==i))+geom_line(aes(x=time,y=p_mean))+geom_ribbon(aes(x=time,ymin=p_low,ymax=p_high),colour="grey",alpha=0.5)
   #conc<-ggplot(f%>%filter(clust==i))+geom_line(aes(x=time,y=c_mean))+geom_ribbon(aes(x=time,ymin=c_low,ymax=c_high),colour="grey",alpha=0.5)+scale_y_log10()
   prof<-ggplot(z%>%filter(source==i))+geom_pointrange(aes(x=size.center,y=mean,ymin=low,ymax=high))+scale_x_log10()+labs(x="Particle Size (nm)",y='Profile')
@@ -229,7 +234,8 @@ check_fit_bysize<-function(maxclust,maxtime,comps,S_prep,data.log.obs){
     data<-data.frame(value=data.log.obs[1:maxtime,i],time=1:maxtime)
     names(data)[1]="value"
     data<-left_join(data,z%>%filter(size==i))
-    t[[n]]<-ggplot(data)+geom_point(aes(x=time,y=value))+geom_line(aes(x=time,y=mean),colour="red")+geom_ribbon(aes(x=time,ymin=low,ymax=high),fill="red",alpha=0.5)+labs(title=paste0("Size ",levels(sizegroup$size.agg)[i]," - on log-scale"))
+    t[[n]]<-ggplot(data)+geom_point(aes(x=time,y=value))+geom_line(aes(x=time,y=mean),colour="red")+geom_ribbon(aes(x=time,ymin=low,ymax=high),fill="red",alpha=0.5)+
+      labs(title=paste0("Size ",levels(sizegroup$size.agg)[i]," - on log-scale"),x="Time step",y="Log concentration log(1/cm^3)")
     n<-n+1
   }
   return(t)

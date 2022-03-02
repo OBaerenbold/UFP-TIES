@@ -7,12 +7,15 @@ library(ggmcmc)
 #load your data
 load("data/data_base.RDAta")
 #load the samples
+#name<-"nimble_noar_a2_c14-_T_1604_comps_1-28_2022-03-01"
 name<-"nimble_noar_r1_c14-_T_1604_comps_1-28_2022-02-26"
 load(paste0("samples/",name,".RData"))
 dir.create(paste0("plots/",name))
 #load some functions to extract results
 source(file = "code/out_ext_functions_base.R")
+#clustfilt<-c(1,3,4,7,9,10,12,13,14) a2
 clustfilt<-c(1:4,6,9,10,13,14)
+names<-c("Airport","Urban","Sec. aerosols B","UKN winter","Fresh traffic","UKN 1","Sec. aerosols A","Aged traffic","UKN 2")
 #some of the output of functions is used as input for the next ones so care is needed when making chances to output of functions
 
 #creating time-series of proportion of concentration and concentration of each cluster
@@ -47,7 +50,7 @@ ggsave(file=paste0("plots/",name,"/poll-corr",".pdf"),device="pdf",width=20,heig
 
 #calculates combined plots of cluster profiles, need to select which ones in plot with clustfilt
 
-cl_comp<-clust_comp(maxclust,maxtime,comps,S_prep,clustfilt=clustfilt,sizegroup)
+cl_comp<-clust_comp(maxclust,maxtime,comps,S_prep,clustfilt=clustfilt,sizegroup,names=names)
 cl_comp[[1]][[4]]
 ggsave(file=paste0("plots/",name,"/clusts-profile.png"),device="png",width=20,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/clusts-profile.pdf"),device="pdf",width=20,height=15,units="cm")
