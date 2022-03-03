@@ -11,3 +11,5 @@ The folder is built as follows:
 - plots are saved in a subfolder of \plots named using the naming of the saved samples
 - data needed for the project are in \data
 - all other explanations are included as comments. Let me know if something is unclear.
+
+-Carolina -Test Access
