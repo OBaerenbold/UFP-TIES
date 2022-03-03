@@ -213,7 +213,7 @@ Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref){
   prop<-ggplot(fs1)+geom_point(aes(x=factor(source),y=c_p*100))+geom_hline(aes(yintercept=1),colour="red")+
     labs(x="Source",y="Prop. of conc. (%)")+scale_y_continuous(breaks=c(0,1,5,10,15,20,25,30,40,50))
   barc<-ggplot(f1, aes(x=as.factor(source),y=c)) + 
-    geom_boxplot(aes(group=source,y=c_mean))+labs(y="c(t)*f(k,t)",x="Source") 
+    geom_boxplot(aes(group=source,y=c_mean))+labs(y="c(t)*s(k,t)",x="Source") 
   #conc<-ggplot(f2)+geom_line(aes(x=time,y=mean))+geom_ribbon(aes(x=time,ymin=low,ymax=high),colour="grey",alpha=0.5)+scale_y_log10()
   sds<-ggplot(v)+geom_pointrange(aes(x=center,y=sqrt(mean),ymin=sqrt(low),ymax=sqrt(high)))+labs(y=expression(sigma[p]),x="Size bin center (nm)")+scale_x_log10()
   plt<-ggarrange(   # plot4 in first row
