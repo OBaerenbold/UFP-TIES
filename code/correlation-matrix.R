@@ -60,3 +60,14 @@ ggplot(cor.matrix)+geom_tile(aes(x=as.numeric(as.character(size1)),y=as.numeric(
 
 
 ggsave(file=paste0("plots/correlation-matrix.pdf"),device="pdf",width=20,height=15,units="cm")
+
+ggplot(cor.matrix)+
+  geom_tile(aes(x=as.numeric(as.character(size1)),y=as.numeric(as.character(size2)),fill=cor),size=2)+
+  labs(x="Particle size (nm)",y="Particle size (nm)",fill="Correlation")+
+  scale_x_log10()+scale_y_log10()+ 
+  scale_fill_binned(type = "viridis",breaks = c(0,.5,.8,.97,1),guide = guide_coloursteps(even.steps = FALSE),
+                    labels=c("<0","[0,0.5)","[0.5,0.8)","[0.8,0.97)","0.97>="))+
+  guides(fill = guide_legend(label.position = "right"))
+
+ggsave(file=paste0("correlation-matrix-bin.pdf"),device="pdf",width=20,height=15,units="cm")
+
