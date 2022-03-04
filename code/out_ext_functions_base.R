@@ -65,10 +65,19 @@ clust_comp<-function(maxclust,maxtime,comps,S_prep,clustfilt=1:maxclust,sizegrou
   z$source<-as.factor(z$source)
   z$source_name<-z$source
   levels(z$source_name)[clustfilt]<-names
+  new.sources<-c("UKN winter","UKN 1","UKN 2")
+  z$l.typ.source<-factor(z$source_name%in%new.sources)
+  require(RColorBrewer)
+  mycolors <- c(brewer.pal(9,"Set1")[-6],"blue")
   plt1<-ggplot(z)+geom_pointrange(aes(x=size.center,y=mean,ymin=low,ymax=high))+facet_wrap(~source)
   plt1b<-ggplot(z)+geom_pointrange(aes(x=size.center,y=logit(mean),ymin=logit(low),ymax=logit(high)))+facet_wrap(~source)
-  plt1c<-ggplot(z%>%filter(source%in%clustfilt))+geom_line(aes(x=size.center,y=mean,group=source_name,colour=source_name))+geom_ribbon(aes(x=size.center,ymin=low,ymax=high,group=source_name,fill=source_name),alpha=0.5)+
-    scale_colour_viridis_d()+scale_x_log10()+xlab('Particle Size (nm)')+ ylab('Proportion of particle conc.')+ggtitle('Source profile') +labs(fill='Source',colour='Source')
+  plt1c<-ggplot(z%>%filter(source%in%clustfilt))+
+    geom_line(aes(x=size.center,y=mean,group=source_name,colour=source_name,linetype=l.typ.source))+
+    scale_colour_manual(values = mycolors)+
+    geom_ribbon(aes(x=size.center,ymin=low,ymax=high,group=source_name,fill=source_name),alpha=0.4)+
+    scale_fill_manual(values = mycolors)+scale_x_log10()+xlab('Particle Size (nm)')+ 
+    ylab('Proportion of particle conc.')+ggtitle('Source profile') +labs(fill='Source',colour='Source')+
+    guides(linetype = "none")
   z2<-S_prep%>%filter(Parameter%in%c("invbw1","invbw2","knot1","knot2"))%>%group_by(index1,Parameter)%>%summarise(mean=mean(value),low=quantile(value,c(0.025)),high=quantile(value,c(0.975)))
   z2<-z2%>%rename("source"="index1")
   z3<-S_prep%>%filter(Parameter%in%c("invbw1","invbw2","knot1","knot2"))%>%select(-index2,-Chain)
