@@ -67,7 +67,8 @@ ggplot(cor.matrix)+
   scale_x_log10()+scale_y_log10()+ 
   scale_fill_binned(type = "viridis",breaks = c(0,.5,.8,.97,1),guide = guide_coloursteps(even.steps = FALSE),
                     labels=c("<0","[0,0.5)","[0.5,0.8)","[0.8,0.97)","0.97>="))+
-  guides(fill = guide_legend(label.position = "right"))
+  guides(fill = guide_legend(label.position = "right"))+
+  geom_point(data=groups.df,aes(x=as.numeric(as.character(size)),y=13.5,colour=as.factor(group %% 2)),shape=15,size=2)+scale_colour_discrete(guide="none")
 
-ggsave(file=paste0("correlation-matrix-bin.pdf"),device="pdf",width=20,height=15,units="cm")
+ggsave(file=paste0("plots/correlation-matrix-bin.pdf"),device="pdf",width=20,height=15,units="cm")
 
