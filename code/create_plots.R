@@ -80,7 +80,7 @@ for(i in 1:maxclust){
 }
 
 #creates overview plot
-tot_sum<-Total_summary(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref)
+tot_sum<-Total_summary(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,hourgroup)
 tot_sum
 ggsave(file=paste0("plots/",name,"/total-summary.png"),device="png",width=25,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/total-summary.pdf"),device="pdf",width=25,height=15,units="cm")
