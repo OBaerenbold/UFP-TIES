@@ -65,10 +65,19 @@ clust_comp<-function(maxclust,maxtime,comps,S_prep,clustfilt=1:maxclust,sizegrou
   z$source<-as.factor(z$source)
   z$source_name<-z$source
   levels(z$source_name)[clustfilt]<-names
+  new.sources<-c("UKN winter","UKN 1","UKN 2")
+  z$l.typ.source<-factor(z$source_name%in%new.sources)
+  require(RColorBrewer)
+  mycolors <- c(brewer.pal(9,"Set1")[-6],"blue")
   plt1<-ggplot(z)+geom_pointrange(aes(x=size.center,y=mean,ymin=low,ymax=high))+facet_wrap(~source)
   plt1b<-ggplot(z)+geom_pointrange(aes(x=size.center,y=logit(mean),ymin=logit(low),ymax=logit(high)))+facet_wrap(~source)
-  plt1c<-ggplot(z%>%filter(source%in%clustfilt))+geom_line(aes(x=size.center,y=mean,group=source_name,colour=source_name))+geom_ribbon(aes(x=size.center,ymin=low,ymax=high,group=source_name,fill=source_name),alpha=0.5)+
-    scale_colour_viridis_d()+scale_x_log10()+xlab('Particle Size (nm)')+ ylab('Proportion of particle conc.')+ggtitle('Source profile') +labs(fill='Source',colour='Source')
+  plt1c<-ggplot(z%>%filter(source%in%clustfilt))+
+    geom_line(aes(x=size.center,y=mean,group=source_name,colour=source_name,linetype=l.typ.source))+
+    scale_colour_manual(values = mycolors)+
+    geom_ribbon(aes(x=size.center,ymin=low,ymax=high,group=source_name,fill=source_name),alpha=0.4)+
+    scale_fill_manual(values = mycolors)+scale_x_log10()+xlab('Particle Size (nm)')+ 
+    ylab('Proportion of particle conc.')+ggtitle('Source profile') +labs(fill='Source',colour='Source')+
+    guides(linetype = "none")
   z2<-S_prep%>%filter(Parameter%in%c("invbw1","invbw2","knot1","knot2"))%>%group_by(index1,Parameter)%>%summarise(mean=mean(value),low=quantile(value,c(0.025)),high=quantile(value,c(0.975)))
   z2<-z2%>%rename("source"="index1")
   z3<-S_prep%>%filter(Parameter%in%c("invbw1","invbw2","knot1","knot2"))%>%select(-index2,-Chain)
@@ -168,9 +177,9 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
     coord_polar(start = -5 / 180 * pi) +geom_point(aes(x=0,y=0),size=2,colour="red")+ylab('Wind Speed (m/s)')+xlab('Wind direction')+
     labs(fill='Kernel')+scale_x_continuous(breaks = c(0,90,180,270),labels = c("N", "E", "S","W")) 
   }
-  week<-ggplot(c1%>%filter(source==i))+geom_pointrange(aes(x=weekday,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+labs(x="Weekday",y="Mean conc. (1/cm^3)")
+  week<-ggplot(c1%>%filter(source==i))+geom_pointrange(aes(x=weekday,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+labs(x="Day of the week",y="Mean conc. (1/cm^3)")
   month<-ggplot(c2%>%filter(source==i))+geom_pointrange(aes(x=month,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+labs(x="Month",y="Mean conc. (1/cm^3)")+ theme(axis.text.x = element_text(angle = 90))
-  day<-ggplot(c3%>%filter(source==i))+geom_pointrange(aes(x=center_hour,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+xlim(0,23)+labs(x="Time of day (h)",y="Mean conc. (1/cm^3)")
+  day<-ggplot(c3%>%filter(source==i))+geom_pointrange(aes(x=center_hour,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+xlim(0,23)+labs(x="Time of the day (h)",y="Mean conc. (1/cm^3)")
   if(i<maxclust){
   t[[i]]<-annotate_figure(ggarrange(   # plot4 in first row
     ggarrange(wind,day, week,month, ncol = 4,labels=c("W","A","B","C")),
@@ -213,7 +222,7 @@ Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,h
   day<-ggplot(ft1)+geom_boxplot(aes(x=factor(center_hour),y=c_mean,group=center_hour))+
     scale_y_log10(limits=c(mins,maxs))+
     geom_pointrange(data=c3%>%filter(source_n=="Total"),aes(x=factor(center_hour),y=m,ymin=low,ymax=high),colour="red",size=0.3)+
-    scale_x_discrete(breaks=ranges.h.brk,labels=ranges.h.lab)+labs(x="Time of day (h)",y="c(t)")+
+    scale_x_discrete(breaks=ranges.h.brk,labels=ranges.h.lab)+labs(x="Time of the day (h)",y="c(t)")+
     theme(axis.text.x = element_text(angle=20))
   #barp<-ggplot(f1, aes(x=as.factor(clust),y=p)) + 
   #  geom_bar(stat="identity")+labs(y="Mean prop. of conc.",x="Cluster")
