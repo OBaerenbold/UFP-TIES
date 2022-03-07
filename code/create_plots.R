@@ -8,14 +8,16 @@ library(ggmcmc)
 load("data/data_base.RDAta")
 #load the samples
 #name<-"nimble_noar_a2_c14-_T_1604_comps_1-28_2022-03-01"
-name<-"nimble_noar_r1_c14-_T_1604_comps_1-28_2022-02-26"
+name<-"nimble_nowind_r1_c14-_T_1604_comps_1-28_2022-03-07"
 load(paste0("samples/",name,".RData"))
 dir.create(paste0("plots/",name))
 #load some functions to extract results
 source(file = "code/out_ext_functions_base.R")
 #clustfilt<-c(1,3,4,7,9,10,12,13,14) a2
-clustfilt<-c(1:4,6,9,10,13,14)
-names<-c("Airport","Urban","Sec. aerosols B","UKN winter","Fresh traffic","UKN 1","Sec. aerosols A","Aged traffic","UKN 2")
+#clustfilt<-c(1:4,6,9,10,13,14)
+clustfilt<-1:14
+#names<-c("Airport","Urban","Sec. aerosols B","UKN winter","Fresh traffic","UKN 1","Sec. aerosols A","Aged traffic","UKN 2")
+names<-as.character(clustfilt)
 #some of the output of functions is used as input for the next ones so care is needed when making chances to output of functions
 
 #creating time-series of proportion of concentration and concentration of each cluster
@@ -51,6 +53,11 @@ ggsave(file=paste0("plots/",name,"/poll-corr",".pdf"),device="pdf",width=20,heig
 #calculates combined plots of cluster profiles, need to select which ones in plot with clustfilt
 
 cl_comp<-clust_comp(maxclust,maxtime,comps,S_prep,clustfilt=clustfilt,sizegroup,names=names)
+#clust_comp_gen as in generic which is not adapted to the specific run we use in the results
+#cl_comp<-clust_comp_gen(maxclust,maxtime,comps,S_prep,clustfilt=clustfilt,sizegroup,names=names)
+#clust_comp_nowind for the runs without wind data
+cl_comp<-clust_comp_nowind(maxclust,maxtime,comps,S_prep,clustfilt=clustfilt,sizegroup,names=names)
+
 cl_comp[[1]][[4]]
 ggsave(file=paste0("plots/",name,"/clusts-profile.png"),device="png",width=20,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/clusts-profile.pdf"),device="pdf",width=20,height=15,units="cm")
@@ -73,6 +80,8 @@ ggsave(file=paste0("plots/",name,"/agg-day.pdf"),device="pdf",width=25,height=15
 
 #creates summary plots by cluster
 comps_sum<-Comp_summary(maxclust,agg_means,cl_comp,clustprobs,pollcorr)
+#just in case of results without wind kernel
+comps_sum<-Comp_summary_nowind(maxclust,agg_means,cl_comp,clustprobs,pollcorr)
 for(i in 1:maxclust){
   print(comps_sum[[i]])
   ggsave(file=paste0("plots/",name,"/clust-profile-",i,".png"),device="png",width=25,height=15,units="cm")
