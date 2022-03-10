@@ -80,13 +80,13 @@ ggsave(file=paste0("plots/",name,"/agg-day.png"),device="png",width=25,height=15
 ggsave(file=paste0("plots/",name,"/agg-day.pdf"),device="pdf",width=25,height=15,units="cm")
 
 #creates summary plots by cluster
-comps_sum<-Comp_summary(maxclust,agg_means,cl_comp,clustprobs,pollcorr)
+comps_sum<-Comp_summary(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup)
 #just in case of results without wind kernel
 #comps_sum<-Comp_summary_nowind(maxclust,agg_means,cl_comp,clustprobs,pollcorr)
 for(i in 1:maxclust){
   print(comps_sum[[i]])
-  ggsave(file=paste0("plots/",name,"/clust-profile-",i,".png"),device="png",width=25,height=15,units="cm")
-  ggsave(file=paste0("plots/",name,"/clust-profile-",i,".pdf"),device="pdf",width=25,height=15,units="cm")
+  #ggsave(file=paste0("plots/",name,"/clust-profile-",i,".png"),device="png",width=25,height=15,units="cm")
+  ggsave(file=paste0("clust-profile-",i,".pdf"),device="pdf",width=25,height=15,units="cm")
 }
 
 #creates overview plot
