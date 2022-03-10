@@ -219,7 +219,7 @@ logit_perc <- trans_new("logit perc",
                         inverse = function(x)100*plogis(x)
 )
 
-Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
+Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup){
   z<-cl_comp[[1]][[1]]
   z3<-cl_comp[[2]][[1]]
   c1<-agg_means[[1]]
@@ -246,9 +246,16 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
     coord_polar(start = -5 / 180 * pi) +geom_point(aes(x=0,y=0),size=2,colour="red")+ylab('Wind Speed (m/s)')+xlab('Wind direction')+
     labs(fill='Kernel')+scale_x_continuous(breaks = c(0,90,180,270),labels = c("N", "E", "S","W")) 
   }
+  aux.ranges<-hourgroup$hour[diff(hourgroup$hourgroup)==1]+1
+  ranges.h.lab<-paste0(c(0,aux.ranges),"-",c(aux.ranges,24))
+  ranges.h.brk<-as.character(unique(hourgroup$center))
   week<-ggplot(c1%>%filter(source==i))+geom_pointrange(aes(x=weekday,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+labs(x="Day of the week",y="Mean conc. (1/cm^3)")
   month<-ggplot(c2%>%filter(source==i))+geom_pointrange(aes(x=month,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+labs(x="Month",y="Mean conc. (1/cm^3)")+ theme(axis.text.x = element_text(angle = 90))
-  day<-ggplot(c3%>%filter(source==i))+geom_pointrange(aes(x=center_hour,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+xlim(0,23)+labs(x="Time of the day (h)",y="Mean conc. (1/cm^3)")
+  day<-ggplot(c3%>%filter(source==i))+geom_pointrange(aes(x=factor(center_hour),y=m,ymin=low,ymax=high))+
+    scale_y_log10(limits=c(min,max))+scale_x_discrete(breaks=ranges.h.brk,labels=ranges.h.lab)+
+    labs(x="Time of the day (h)",y="Mean conc. (1/cm^3)")+
+    theme(axis.text.x = element_text(angle=90))
+    #ggplot(c3%>%filter(source==i))+geom_pointrange(aes(x=center_hour,y=m,ymin=low,ymax=high))+scale_y_log10(limits=c(min,max))+xlim(0,23)+labs(x="Time of the day (h)",y="Mean conc. (1/cm^3)")
   if(i<maxclust){
   t[[i]]<-annotate_figure(ggarrange(   # plot4 in first row
     ggarrange(wind,day, week,month, ncol = 4,labels=c("W","A","B","C")),
