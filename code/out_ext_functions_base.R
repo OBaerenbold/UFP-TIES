@@ -47,8 +47,17 @@ pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt,names){
   cdta<-cdta%>%pivot_longer(levels[1]:PMFR,names_to="type2",values_to="cor")
   cdta$type1<-factor(cdta$type1,levels=levels)
   cdta$type2<-factor(cdta$type2,levels=levels)
-  plt4<- ggplot(cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
-    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=names) + scale_y_discrete(labels=names)
+  #THIS IS REALLY PAPER DEPENDENT
+  plt4<-  cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength])%>%
+    mutate(type1 = fct_relevel(type1, "S_1","S_2","S_3","S_4","S_10","S_6","S_13","S_14","S_9")) %>%
+    mutate(type2 = fct_relevel(type2, "S_1","S_2","S_3","S_4","S_10","S_6","S_13","S_14","S_9")) %>%
+    ggplot(aes(x=type1,y=type2,fill=cor))+
+    geom_tile()+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
+    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=1:clustlength) + scale_y_discrete(labels=1:clustlength)
+
+    #ggplot(cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+
+    #geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
+    #ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=names) + scale_y_discrete(labels=names)
   
   plt5<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
   plt6<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[(clustlength+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
