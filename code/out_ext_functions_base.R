@@ -21,7 +21,7 @@ clustprob<-function(maxclust,maxtime,S_prep,timeref){
   return(list(z,plt,plt2,m,plt3))
 }
 
-pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt){
+pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt,names){
   library(corrplot)
   data<-data%>%filter(source%in%clustfilt)
   probs<-data%>%pivot_wider(id_cols = c("time","source"),names_from="source",names_prefix = "S_",values_from="p_mean")%>%select(-time)
@@ -48,7 +48,7 @@ pollutants_corr<-function(data,poll,maxtime,maxclust,clustfilt){
   cdta$type1<-factor(cdta$type1,levels=levels)
   cdta$type2<-factor(cdta$type2,levels=levels)
   plt4<- ggplot(cdta%>%filter(type1%in%levels[1:clustlength],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_gradient2(low = "steelblue", mid = "white", high = "darkred",midpoint=0)+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="black") + 
-    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=clustfilt) + scale_y_discrete(labels=clustfilt)
+    ylab('Source')+xlab('Source') + labs(fill="Correlation") + scale_x_discrete(labels=names) + scale_y_discrete(labels=names)
   
   plt5<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[1:clustlength]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
   plt6<-ggplot(cdta%>%filter(type1%in%levels[(clustlength+1):length(levels)],type2%in%levels[(clustlength+1):length(levels)]))+geom_tile(aes(x=type1,y=type2,fill=cor))+scale_fill_viridis_c()+ geom_text(aes(x=type1,y=type2,label = round(cor, 2)),colour="white") 
@@ -219,7 +219,7 @@ logit_perc <- trans_new("logit perc",
                         inverse = function(x)100*plogis(x)
 )
 
-Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup){
+Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup,names){
   z<-cl_comp[[1]][[1]]
   z3<-cl_comp[[2]][[1]]
   c1<-agg_means[[1]]
@@ -261,13 +261,13 @@ Comp_summary<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup)
     ggarrange(wind,day, week,month, ncol = 4,labels=c("W","A","B","C")),
     ggarrange(prof,prof_log,pltcor,ncol=3,labels=c("D","E","F")),
     nrow = 2  # plot1 and plot2 in second row
-  ),top=paste0("Source-",i," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
+  ),top=paste0("Source-",names[i]," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
   }else{
     t[[maxclust]]<-annotate_figure(ggarrange(   # plot4 in first row
       ggarrange(day, week,month, ncol = 3),
       ggarrange(prof,prof_log,pltcor,ncol=3),
       nrow = 2  # plot1 and plot2 in second row
-    ),top=paste0("Source-",i," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
+    ),top=paste0("Source-",names[i]," / ",round(fs1$c_p[i]*100,1),"% of total concentration"))
   }
   }
   return(t)
@@ -307,7 +307,7 @@ Comp_summary_nowind<-function(maxclust,agg_means,cl_comp,clustprobs,pollcorr){
   return(t)
 }
 
-Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,hourgroup){
+Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,hourgroup,names14){
   v<-S_prep%>%filter(Parameter=="Var")%>%group_by(index1)%>%summarise(mean=mean(value),low=quantile(value,c(0.025)),high=quantile(value,c(0.975)))
   v<-left_join(v,unique(sizegroup%>%select(index1=group,center)),by="index1")
   v<-v%>%rename("size"="index1")
@@ -336,15 +336,18 @@ Total_summary<-function(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,h
     theme(axis.text.x = element_text(angle=20))
   #barp<-ggplot(f1, aes(x=as.factor(clust),y=p)) + 
   #  geom_bar(stat="identity")+labs(y="Mean prop. of conc.",x="Cluster")
-  prop<-ggplot(fs1)+geom_point(aes(x=factor(source),y=c_p*100))+geom_hline(aes(yintercept=1),colour="red")+
-    labs(x="Source",y="Prop. of conc. (%)")+scale_y_continuous(breaks=c(0,1,5,10,15,20,25,30,40,50))
+  #prop<-ggplot(fs1)+geom_point(aes(x=factor(source),y=c_p*100))+geom_hline(aes(yintercept=1),colour="red")+
+  #  labs(x="Source",y="Prop. of conc. (%)")+scale_y_continuous(breaks=c(0,1,5,10,15,20,25,30,40,50))
+  prop<-ggplot(fs1)+geom_point(aes(x=factor(as.character(source),levels = names14),y=c_p*100))+geom_hline(aes(yintercept=1),colour="red")+
+    labs(x="Source",y="Prop. of conc. (%)")+scale_y_continuous(breaks=c(0,1,5,10,15,20,25,30,40,50))+
+    scale_x_discrete(labels=1:maxclust)
   barc<-ggplot(f1, aes(x=as.factor(source),y=c)) + 
     geom_boxplot(aes(group=source,y=c_mean))+labs(y="c(t)*s(k,t)",x="Source") 
   #conc<-ggplot(f2)+geom_line(aes(x=time,y=mean))+geom_ribbon(aes(x=time,ymin=low,ymax=high),colour="grey",alpha=0.5)+scale_y_log10()
   sds<-ggplot(v)+geom_pointrange(aes(x=center,y=sqrt(mean),ymin=sqrt(low),ymax=sqrt(high)))+labs(y=expression(sigma[p]),x="Size bin center (nm)")+scale_x_log10()
   plt<-ggarrange(   # plot4 in first row
     ggarrange(day,week,month,ncol=3,labels=c("A","B","C")),
-    ggarrange(prop,sds, ncol = 2,labels=c("D","E")),
+    ggarrange(sds,prop, ncol = 2,labels=c("D","E")),
     nrow = 2  # plot1 and plot2 in second row
     )
   return(plt)

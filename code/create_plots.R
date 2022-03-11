@@ -15,10 +15,12 @@ dir.create(paste0("plots/",name))
 #load some functions to extract results
 source(file = "code/out_ext_functions_base.R")
 #clustfilt<-c(1,3,4,7,9,10,12,13,14) a2
-#clustfilt<-c(1:4,6,9,10,13,14)
-clustfilt<-c(1,7,9,10,11,12,13,14)
+clustfilt<-c(1:4,6,9,10,13,14)
+#clustfilt<-c(1,7,9,10,11,12,13,14)
 #names<-c("Airport","Urban","Sec. aerosols B","UKN winter","Fresh traffic","UKN 1","Sec. aerosols A","Aged traffic","UKN 2")
-names<-as.character(clustfilt)
+#names<-as.character(clustfilt)
+names<-as.character(c(1:4,6,9,5,7,8))
+names14<-as.character(c(1:4,10,6,13,14,9,5,11,12,7,8))
 #some of the output of functions is used as input for the next ones so care is needed when making chances to output of functions
 
 #creating time-series of proportion of concentration and concentration of each cluster
@@ -33,7 +35,8 @@ clustprobs[[5]]
 ggsave(file=paste0("plots/",name,"/total-conc-timeseries",".png"),device="png",width=20,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/total-conc-timeseries",".pdf"),device="pdf",width=20,height=15,units="cm")
 #calculates correlation matrix of time series of each cluster with pollutations
-pollcorr<-pollutants_corr(data=clustprobs[[1]],poll=poll,maxtime=maxtime,maxclust=maxclust,clustfilt=clustfilt)
+pollcorr<-pollutants_corr(data=clustprobs[[1]],poll=poll,maxtime=maxtime,maxclust=maxclust,clustfilt=clustfilt,
+                          names=names)
 pollcorr[[1]][[2]]
 ggsave(file=paste0("plots/",name,"/clust-prob-corr",".png"),device="png",width=20,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/clust-prob-corr",".pdf"),device="pdf",width=20,height=15,units="cm")
@@ -80,17 +83,17 @@ ggsave(file=paste0("plots/",name,"/agg-day.png"),device="png",width=25,height=15
 ggsave(file=paste0("plots/",name,"/agg-day.pdf"),device="pdf",width=25,height=15,units="cm")
 
 #creates summary plots by cluster
-comps_sum<-Comp_summary(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup)
+comps_sum<-Comp_summary(maxclust,agg_means,cl_comp,clustprobs,pollcorr,hourgroup,names=names14)
 #just in case of results without wind kernel
 #comps_sum<-Comp_summary_nowind(maxclust,agg_means,cl_comp,clustprobs,pollcorr)
-for(i in 1:maxclust){
+for(i in clustfilt){
   print(comps_sum[[i]])
   #ggsave(file=paste0("plots/",name,"/clust-profile-",i,".png"),device="png",width=25,height=15,units="cm")
   ggsave(file=paste0("clust-profile-",i,".pdf"),device="pdf",width=25,height=15,units="cm")
 }
 
 #creates overview plot
-tot_sum<-Total_summary(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,hourgroup)
+tot_sum<-Total_summary(maxclust,agg_means,clustprobs,S_prep,sizegroup,timeref,hourgroup,names14)
 tot_sum
 ggsave(file=paste0("plots/",name,"/total-summary.png"),device="png",width=25,height=15,units="cm")
 ggsave(file=paste0("plots/",name,"/total-summary.pdf"),device="pdf",width=25,height=15,units="cm")
