@@ -70,5 +70,6 @@ ggplot(cor.matrix)+
   guides(fill = guide_legend(label.position = "right"))+
   geom_point(data=groups.df,aes(x=as.numeric(as.character(size)),y=13.5,colour=as.factor(group %% 2)),shape=15,size=2)+scale_colour_discrete(guide="none")
 
-ggsave(file=paste0("plots/correlation-matrix-bin.pdf"),device="pdf",width=20,height=15,units="cm")
-
+ggsave(file=paste0("plots/fig1-corr-matrix.pdf"),device="pdf",width=20,height=15,units="cm")
+ggsave(file=paste0("plots/fig1-corr-matrix.png"),
+       dpi=300,device="png",width=20,height=15,units="cm")
