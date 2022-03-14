@@ -12,14 +12,14 @@ Nimble run as summarized and discussed in the paper is available on [Zenodo](htt
 
 # Installation and Setup
 
-If running on Windows, you will need **RTools** installed and functioning properly
+If running on Windows, you will need **Rtools** installed and functioning properly
 in order to build, link and run **Nimble**. You can install Nimble from CRAN
 using
 
     install.packages("nimble")
 
 and it has two dependencies: **coda** and **igraph**. **igraph** has several odd dependencies,
-so we recommend installing the binary ersion for Windows rather than compiling it. Do compile
+so we recommend installing the binary version for Windows rather than compiling it. Do compile
 **nimble** - if both **code** and **igraph** are installed, it should work reasonably easily
 with **Rtools**. These steps have been tested on both R 3.6.1 and 4.1.2 on Windows 7 and 10.
 
